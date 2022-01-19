@@ -2,11 +2,38 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
-import Amplify from 'aws-amplify';
+import Amplify, { Hub } from 'aws-amplify';
 import aws_exports from './aws-exports';
 Amplify.configure(aws_exports);
 
 class App extends Component {
+
+  componentDidMount() {
+    Hub.listen("auth", ({ payload: { event, data } }) => {
+      switch (event) {
+        case "signIn":
+          this.setState({ user: data });
+          console.log("Standard sign in");
+          break;
+        case 'cognitoHostedUI':
+          this.setState({ user: data });
+          console.log("Hosted UI sign in");
+          break;
+        case "signOut":
+          this.setState({ user: null });
+          console.log("Sign out");
+          break;
+        case "customOAuthState":
+          this.setState({ customState: data});
+          console.log("Custom OAuth state set");
+          break;
+        default: 
+          console.log(event)
+          break;
+      }
+    });
+  }
+
   render() {
     return (
       <div className="App">
